@@ -1,31 +1,35 @@
-const router = require('express').Router();
+const fs = require("fs");
 const { v4: uuidv4 } = require('uuid');
+const uuid = require('uuid')
 
 
-router.get("/api/notes", (request, response) => {
-    let data = JSON.parse(fs.readFileSync("./db/db.json", "utf8"));    
-    response.json(data);
-});
+module.exports = function (app) {
+    app.get("/api/notes", (req, res) => {
+        let data = JSON.parse(fs.readFileSync("./db/db.json"));
+        res.json(data);
+    });
 
 
-router.post("/api/notes", (request, response) => {
-    const newNote = request.body;
-    newNote.id = uuidv4();
-    let data = JSON.parse(fs.readFileSync("./db/db.json", "utf8"));
-    data.push(newNote);
-    fs.writeFileSync('./db/db.json', JSON.stringify(data));
-    response.json(data);
-});
-
-router.delete("/api/notes/:id", (request, response) => {
-    let noteId = request.params.id.toString();
-    let data = JSON.parse(fs.readFileSync("./db/db.json", "utf8"));
-    const newData = data.filter( note => note.id.toString() !== noteId );
-    fs.writeFileSync('./db/db.json', JSON.stringify(newData));
-    response.json(newData);
-});
+    app.post("/api/notes", (req, res) => {
+        const createNote = req.body;
+        createNote.id = uuidv4();
+        let data = JSON.parse(fs.readFileSync("./db/db.json"));
+        data.push(createNote);
+        fs.writeFileSync('./db/db.json', JSON.stringify(data));
+        res.json(data);
+    });
 
 
-uuidv4();
-module.exports = router;
+    app.delete("/api/notes/:id", (req, res) => {
+        let noteList = JSON.parse(fs.readFileSync("./db/db.json"));
+        let noteId = (req.params.id).toString();
+    
+        noteList = noteList.filter(selected => {
+            return selected.id != noteId;
+        })
+    
+        fs.writeFileSync("./db/db.json", JSON.stringify(noteList));
+        res.json(noteList);
+    });
+};
 
